@@ -1,0 +1,47 @@
+#SPDX-License-Identifier: MIT-0
+---
+# tasks file for vector-role
+
+- name: Ensure Vector configuration directory exists
+  become: true
+  ansible.builtin.file:
+    path: "{{ vector_config_dir }}"
+    state: directory
+    mode: '0755'
+
+- name: Check if Vector DEB already exists
+  ansible.builtin.stat:
+    path: "/tmp/vector_{{ vector_version }}-1_amd64.deb"
+  register: vector_deb_file
+
+- name: Download Vector DEB package via wget
+  ansible.builtin.command: >
+    wget -q -O "/tmp/vector_{{ vector_version }}-1_amd64.deb"
+    "https://install.datadoghq.com/vector/{{ vector_version }}/vector_{{ vector_version }}-1_amd64.deb"
+  when: not vector_deb_file.stat.exists
+  register: wget_vector_download
+  changed_when: not vector_deb_file.stat.exists
+  check_mode: false
+  tags:
+    - skip_ansible_lint
+
+- name: Install Vector DEB package via APT
+  become: true
+  ansible.builtin.apt:
+    deb: "/tmp/vector_{{ vector_version }}-1_amd64.deb"
+
+- name: Deploy Vector configuration from template
+  become: true
+  ansible.builtin.template:
+    src: templates/vector.yaml.j2
+    dest: "{{ vector_config_dir }}/vector.yaml"
+    mode: '0644'
+  notify: Restart vector service
+
+- name: Start and enable Vector service
+  become: true
+  ansible.builtin.systemd_service:
+    name: vector
+    enabled: true
+    state: started
+  when: not ansible_check_mode

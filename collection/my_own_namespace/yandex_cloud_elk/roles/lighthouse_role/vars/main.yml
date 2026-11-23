@@ -1,0 +1,5 @@
+#SPDX-License-Identifier: MIT-0
+---
+# vars file for lighthouse-role
+lighthouse_install_dir: "/var/www/lighthouse"
+lighthouse_config_dir: "/etc/nginx/conf.d"
