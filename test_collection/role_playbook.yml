@@ -1,0 +1,10 @@
+---
+- name: Test my_own_role from my_own_namespace.yandex_cloud_elk collection
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - role: my_own_namespace.yandex_cloud_elk.my_own_role
+      vars:
+        path: /tmp/collection_test_file.txt
+        content: "Hello from role inside collection!"
